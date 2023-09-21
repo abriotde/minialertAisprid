@@ -1,9 +1,10 @@
 package main
 
 import "fmt"
-import "./cmd"
+import "github.com/abriotde/minialertAisprid/cmd"
 
 func main() {
     fmt.Println("hello world")
+    cmd.Execute()
 }
 
