@@ -1,4 +1,6 @@
-
+/*
+	The goal of this file is to use MiniserverAisprid as CLI (for client and server)
+*/
 package cmd
 
 import (
@@ -7,13 +9,16 @@ import (
 	"strconv"
 	"github.com/spf13/cobra"
 	"github.com/abriotde/minialertAisprid/server"
+	"bufio"
+	"strings"
+	"errors"
 )
 
 const (
 	EXIT_ARGUMENT_ERROR = 1
 )
 
-func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, error) {
+func runClientCmd(client server.MiniserverAispridClient, args []string) error {
 	var argsLen = len(args)
 	if argsLen<1 {
 		fmt.Fprintln(os.Stderr, "You must give comands to client.")
@@ -32,20 +37,20 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, e
 		varValue,err := strconv.Atoi(args[2])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Argument 2 must be an integer for the value : ",args[2],".")
-			return false, err
+			return err
 		}
 		// TODO : check varname/varvalue match possible value (No injection)
         	fmt.Println("Send to server : ", varName, " = ", varValue)
         	_,err = client.Set(varName, int32(varValue))
         	if err!=nil {
-        		return false, err
+        		return err
         	}
 	} else if clientCmd=="get" {
 		if argsLen>1 && args[1]=="alerts" {
 			fmt.Println("Call server GetAlertHistory.")
 			alerts,err := client.GetAlertHistory()
 			if err!=nil {
-				return false, err
+				return err
 			}
 			fmt.Println("Alerts :")
 			for _, alert := range alerts {
@@ -55,12 +60,12 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, e
 			fmt.Fprintln(os.Stderr, "Unimplemented parameter for get.")
 		}
 	} else if clientCmd=="help" {
-		fmt.Println("Existing commands are : \n - 'send [type] [int_value]' : Implemented types are cpu (Should be less than 80) and battery (Should be beetween 20 and 98) : see monitorer.go for more informations. \n - 'get alerts'\n - help \n")
+		fmt.Println("Existing commands are : \n - 'send [type] [int_value]' : Implemented types are cpu (Should be less than 80) and battery (Should be beetween 20 and 98) : see monitorer.go for more informations. \n - 'get alerts'\n - help \n - quit : to exit on interactive mode.\n")
 	} else {
-		fmt.Fprintln(os.Stderr, "Unknown client command : ", clientCmd, " possibilities are send|get|help.")
-		os.Exit(EXIT_ARGUMENT_ERROR)
+		fmt.Fprintln(os.Stderr, "Unknown client command : '"+clientCmd+"' possibilities are send|get|help|quit.")
+		return errors.New("Unknown client command : '"+clientCmd+"' possibilities are send|get|help|quit.")
 	}
-        return true, nil
+        return nil
 }
 
 var (
@@ -90,6 +95,25 @@ var (
 				}
 				if interactive {
 			    		fmt.Println("Interactive mode is enable.")
+			    		reader := bufio.NewReader(os.Stdin)
+			    		run := true
+			    		for run {
+			    			fmt.Print(" $ ")
+						str, err := reader.ReadString('\n')
+						if err != nil {
+							fmt.Fprintln(os.Stderr, "Fail read input.")
+							continue
+						}
+						last := len(str) - 1
+						str = str[:last] // Remove last character : \n
+						args := strings.Split(str, " ")
+						if len(args)>0 && args[0]=="quit" {
+							run = false
+			    				fmt.Println("Goodbye.")
+							break
+						}
+		    				runClientCmd(client, args)
+			    		}
 			    		// TODO : implement
 			    	} else {
 			    		runClientCmd(client, args)

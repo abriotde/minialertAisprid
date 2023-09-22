@@ -11,12 +11,14 @@ import (
 	"errors"
 )
 
+// It is client for connecting to "MiniserverAisprid" server.
 type MiniserverAispridClient struct {
-	connection *grpc.ClientConn
+	connection *grpc.ClientConn 
 	grpcConnection messages.GreeterClient
 	connected bool
 }
 
+// Fonction to connect to the server : prerequisites for all communications : call to GetAlertHistory and Set
 func Connect (url string) (MiniserverAispridClient, error)  {
 	var client = MiniserverAispridClient{connected:false}
         // conn, err := net.Dial("tcp", url)
@@ -31,10 +33,12 @@ func Connect (url string) (MiniserverAispridClient, error)  {
 	fmt.Println("Connected to  : ", url)
 	return client, nil
 }
+// Fonction to close connection to the server
 func (client MiniserverAispridClient) Close ()  {
 	client.connection.Close()
 }
 
+// Return alert history based on previous Set() call where name/value exceed threashold defined on server side.
 func (client MiniserverAispridClient) GetAlertHistory () ([]*messages.GetAlertHistoryReply_Alert, error) {
 	fmt.Println("GetAlertHistory from server : ")
 
@@ -52,7 +56,7 @@ func (client MiniserverAispridClient) GetAlertHistory () ([]*messages.GetAlertHi
 	}
 	return r.GetAlertHistory(), nil
 }
-
+// Set the current value of the variable name registred on the server.
 func (client MiniserverAispridClient) Set (varName string, varValue int32) (string, error) {
 	fmt.Println("Set to server : ", varName, " = ", varValue)
 
@@ -69,7 +73,7 @@ func (client MiniserverAispridClient) Set (varName string, varValue int32) (stri
 	fmt.Println("Greeting: ", r.GetMessage())
 	return "OK", nil
 }
-
+// Function to test client/server communication with simple ASCII (useless now?)
 func (client MiniserverAispridClient) Test () (string, error) {
 	/* fmt.Println("Test mode : client")
         reader := bufio.NewReader(os.Stdin)

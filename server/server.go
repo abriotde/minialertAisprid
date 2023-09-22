@@ -27,6 +27,7 @@ type server_t struct {
 	messages.UnimplementedGreeterServer
 }
 
+// Launch the server and never stop (Hard kill for stop : TODO : better way)
 func Listen (port string) (MiniserverAisprid, error) {
 	var server = MiniserverAisprid{connected:false}
         listener, err := net.Listen("tcp", port)
@@ -40,14 +41,14 @@ func Listen (port string) (MiniserverAisprid, error) {
 	return server, nil
 }
 
-// 
+// To treat the SendDataMetric request. It will register value of variable at current time but for the moment it register only if it alerts.
 func (s *server_t) SendDataMetric(ctx context.Context, in *messages.SendDataMetricRequest) (*messages.SendDataMetricReply, error) {
 	sValue := strconv.Itoa(int(in.GetValue()))
 	fmt.Println("Received: ", in.GetName(), " = ", sValue)
 	monitoring.Log(in.GetName(), in.GetValue())
 	return &messages.SendDataMetricReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
 }
-// 
+// To treat the GetAlertHistory request.
 func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHistoryRequest) (*messages.GetAlertHistoryReply, error) {
 	fmt.Println("Ask for alerts.")
 	var alerts []*messages.GetAlertHistoryReply_Alert
@@ -72,6 +73,7 @@ func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {
 	return server, nil
 }
 
+// Function to test client/server communication with simple ASCII (useless now?)
 func (server MiniserverAisprid) Test () (MiniserverAisprid, error) {
         for {
         	// Waiting connection

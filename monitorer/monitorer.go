@@ -1,5 +1,14 @@
 package monitorer
 
+
+/*
+	The goal of this is to register value for differents key during the time and generate alerts if necessary.
+	WARNING: It does not support many client.
+	Many improvement can be done:
+	 - Configuration file for possible key and alerts threasholds.
+	 - Register as persistent (Just in RAM for the moment).
+*/
+
 import (
         "time"
         "fmt"
@@ -10,7 +19,6 @@ type Alert struct {
     Name      string
     Value     int32
 }
-
 
 type Monitorer struct {
 	alerts []Alert
