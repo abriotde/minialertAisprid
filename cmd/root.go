@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"strconv"
 	"github.com/spf13/cobra"
 	"github.com/abriotde/minialertAisprid/server"
 )
@@ -29,10 +30,14 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, e
 			os.Exit(EXIT_ARGUMENT_ERROR)
 		}
 		var varName = args[1]
-		var varValue = args[2]
+		varValue,err := strconv.Atoi(args[2])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Argument 2 must be an integer for the value : ",args[2],".")
+			return false, err
+		}
 		// TODO : check varname/varvalue match possible value (No injection)
         	fmt.Println("Send to server : ", varName, " = ", varValue)
-        	_,err := client.Set(varName, varValue)
+        	_,err = client.Set(varName, int32(varValue))
         	if err!=nil {
         		return false, err
         	}
@@ -82,6 +87,7 @@ var (
 			    		runClientCmd(client, args)
 					fmt.Println("Client: " + strings.Join(args, " "))
 			   	}
+			   	client.Close()
 			}
 		},
 	}

@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"net"
 	"os"
+        "time"
+        "context"
+        "strconv"
         "bufio"
         "strings"
-        "time"
+	"google.golang.org/grpc"
+	"github.com/abriotde/minialertAisprid/messages"
 )
 
 type MiniserverAisprid struct {
@@ -15,7 +19,9 @@ type MiniserverAisprid struct {
 	connected bool
 }
 
-func (s MiniserverAisprid) run () {
+// server is used to implement helloworld.GreeterServer.
+type server_t struct {
+	messages.UnimplementedGreeterServer
 }
 
 func Listen (port string) (MiniserverAisprid, error) {
@@ -27,12 +33,35 @@ func Listen (port string) (MiniserverAisprid, error) {
         }
         defer listener.Close()
         server.listener = listener
+        server.Run()
 
+	return server, nil
+}
+
+// SayHello implements helloworld.GreeterServer
+func (s *server_t) SetIntVar(ctx context.Context, in *messages.SetIntVarRequest) (*messages.SetIntVarReply, error) {
+	sValue := strconv.Itoa(int(in.GetValue()))
+	fmt.Println("Received: ", in.GetName(), " = ", sValue)
+	return &messages.SetIntVarReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
+}
+
+func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {
+	grpcServer := grpc.NewServer()
+	messages.RegisterGreeterServer(grpcServer, &server_t{})
+	fmt.Println("server listening at ", server.listener.Addr())
+	if err := grpcServer.Serve(server.listener); err != nil {
+		fmt.Fprintln(os.Stderr, "failed to serve: %v", err)
+		return server, err
+	}
+	return server, nil
+}
+
+func (server MiniserverAisprid) Test () (MiniserverAisprid, error) {
         for {
         	// Waiting connection
-		conn, err := listener.Accept()
+		conn, err := server.listener.Accept()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Impossible accept on port : ",port,".")
+			fmt.Fprintln(os.Stderr, "Impossible accept.")
 			return server, err
 		}
 		server.connection = conn

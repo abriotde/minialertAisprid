@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "./messages";
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SetIntVar (SetIntVarRequest) returns (SetIntVarReply) {}
+}
+
+// The request message.
+message SetIntVarRequest {
+  string name = 1;
+  int32 value = 2;
+}
+
+// The response message
+message SetIntVarReply {
+  bool ok = 1;
+  string message = 2;
+}
+

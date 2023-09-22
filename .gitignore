@@ -1,1 +1,4 @@
 minialertAisprid
+go.sum
+messages/**.go
+
