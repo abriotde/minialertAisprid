@@ -2,12 +2,13 @@ package server
 
 import (
 	"fmt"
-	"os"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"github.com/abriotde/minialertAisprid/messages"
+	"github.com/abriotde/minialertAisprid/logger"
 	"context"
 	"time"
+	"strconv"
 	"errors"
 )
 
@@ -24,7 +25,7 @@ func Connect (url string) (MiniserverAispridClient, error)  {
         // conn, err := net.Dial("tcp", url)
 	conn, err := grpc.Dial(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
         if err != nil {
-		fmt.Fprintln(os.Stderr, "Impossible to connect to : ",url,".")
+		logger.Logger.Error("Impossible to connect to : "+url+".")
 		return client, err
         }
         client.connection = conn
@@ -47,11 +48,11 @@ func (client MiniserverAispridClient) GetAlertHistory () ([]*messages.GetAlertHi
 	defer cancel()
 	r, err := client.grpcConnection.GetAlertHistory(ctx, &messages.GetAlertHistoryRequest{})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "could not GetAlertHistory", err)
+		logger.Logger.Error("could not GetAlertHistory") // TODO: + err
 		return make([]*messages.GetAlertHistoryReply_Alert, 0), err
 	}
 	if r.GetOk() != true {
-		fmt.Fprintln(os.Stderr, "could not GetAlertHistory : Server refuse.")
+		logger.Logger.Error("could not GetAlertHistory : Server refuse.")
 		return make([]*messages.GetAlertHistoryReply_Alert, 0), errors.New("could not GetAlertHistory : Server refuse.")
 	}
 	return r.GetAlertHistory(), nil
@@ -65,10 +66,10 @@ func (client MiniserverAispridClient) Set (varName string, varValue int32) (stri
 	defer cancel()
 	r, err := client.grpcConnection.SendDataMetric(ctx, &messages.SendDataMetricRequest{Name:varName, Value:varValue})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "could not SendDataMetric : ",varName," = ",varValue,": ", err)
+		logger.Logger.Error("could not SendDataMetric : "+varName," = "+strconv.Itoa(int(varValue))+": ") // TODO: + err
 	}
 	if r.GetOk() != true {
-		fmt.Fprintln(os.Stderr, "could not SendDataMetric : ",varName," = ",varValue,": Server refuse.")
+		logger.Logger.Error("could not SendDataMetric : "+varName+" = "+strconv.Itoa(int(varValue))+": Server refuse.")
 	}
 	fmt.Println("Greeting: ", r.GetMessage())
 	return "OK", nil

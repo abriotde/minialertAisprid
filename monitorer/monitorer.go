@@ -12,6 +12,8 @@ package monitorer
 import (
         "time"
         "fmt"
+        "strconv"
+	"github.com/abriotde/minialertAisprid/logger"
 )
 
 type Alert struct {
@@ -38,7 +40,7 @@ func (monito Monitorer) Log (varname string, varvalue int32) {
 	       	monito.alerts = append(monito.alerts, alert)
 	}
 	for _,a := range monito.alerts {
-		fmt.Println("Alert: ", a.Name, " = ", a.Value)
+		logger.Logger.Info("Alert: "+a.Name+" = "+strconv.Itoa(int(a.Value)))
 	}
 }
 

@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net"
-	"os"
         "time"
         "context"
         "strconv"
@@ -13,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"github.com/abriotde/minialertAisprid/messages"
 	"github.com/abriotde/minialertAisprid/monitorer"
+	"github.com/abriotde/minialertAisprid/logger"
 )
 
 type MiniserverAisprid struct {
@@ -21,18 +21,19 @@ type MiniserverAisprid struct {
 	connected bool
 }
 
-var monitoring monitorer.Monitorer
 
 type server_t struct {
 	messages.UnimplementedGreeterServer
+	monitoring monitorer.Monitorer
 }
+var monitoring_server server_t
 
-// Launch the server and never stop (Hard kill for stop : TODO : better way)
+// Launch the server and never stop (Hard kill for stop : TODO : better way: special message?)
 func Listen (port string) (MiniserverAisprid, error) {
 	var server = MiniserverAisprid{connected:false}
         listener, err := net.Listen("tcp", port)
         if err != nil {
-		fmt.Fprintln(os.Stderr, "Impossible listen on : ",port,".")
+		logger.Logger.Error("Impossible listen on : "+port+".")
 		return server, err
         }
         defer listener.Close()
@@ -45,7 +46,7 @@ func Listen (port string) (MiniserverAisprid, error) {
 func (s *server_t) SendDataMetric(ctx context.Context, in *messages.SendDataMetricRequest) (*messages.SendDataMetricReply, error) {
 	sValue := strconv.Itoa(int(in.GetValue()))
 	fmt.Println("Received: ", in.GetName(), " = ", sValue)
-	monitoring.Log(in.GetName(), in.GetValue())
+	s.monitoring.Log(in.GetName(), in.GetValue())
 	return &messages.SendDataMetricReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
 }
 // To treat the GetAlertHistory request.
@@ -53,7 +54,8 @@ func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHis
 	fmt.Println("Ask for alerts.")
 	var alerts []*messages.GetAlertHistoryReply_Alert
 	var nbAlerts = 0
-	for _, alert := range monitoring.GetAlertHistory() {
+	// On converti les alertes "Monitorer" en alertes "protobuf"
+	for _, alert := range s.monitoring.GetAlertHistory() {
 		a := messages.GetAlertHistoryReply_Alert{Timestamp:timestamppb.New(alert.Timestamp), Name:alert.Name, Value:alert.Value}
 		alerts = append(alerts, &a)
 		nbAlerts += 1
@@ -64,10 +66,10 @@ func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHis
 
 func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {
 	grpcServer := grpc.NewServer()
-	messages.RegisterGreeterServer(grpcServer, &server_t{})
+	messages.RegisterGreeterServer(grpcServer, &monitoring_server)
 	fmt.Println("server listening at ", server.listener.Addr())
 	if err := grpcServer.Serve(server.listener); err != nil {
-		fmt.Fprintln(os.Stderr, "failed to serve: %v", err)
+		logger.Logger.Error("failed to serve: ") // TODO: + err
 		return server, err
 	}
 	return server, nil
@@ -79,7 +81,7 @@ func (server MiniserverAisprid) Test () (MiniserverAisprid, error) {
         	// Waiting connection
 		conn, err := server.listener.Accept()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Impossible accept.")
+			logger.Logger.Error("Impossible accept.")
 			return server, err
 		}
 		server.connection = conn
