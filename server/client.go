@@ -8,6 +8,7 @@ import (
 	"github.com/abriotde/minialertAisprid/messages"
 	"context"
 	"time"
+	"errors"
 )
 
 type MiniserverAispridClient struct {
@@ -34,9 +35,22 @@ func (client MiniserverAispridClient) Close ()  {
 	client.connection.Close()
 }
 
-func (client MiniserverAispridClient) Get (varName string) (string, error) {
-	fmt.Println("Get from server : ", varName)
-	return "OK", nil
+func (client MiniserverAispridClient) GetAlerts () ([]*messages.GetAlertsReply_Alert, error) {
+	fmt.Println("GetAlerts from server : ")
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	r, err := client.grpcConnection.GetAlerts(ctx, &messages.GetAlertsRequest{})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "could not GetAlerts", err)
+		return make([]*messages.GetAlertsReply_Alert, 0), err
+	}
+	if r.GetOk() != true {
+		fmt.Fprintln(os.Stderr, "could not GetAlerts : Server refuse.")
+		return make([]*messages.GetAlertsReply_Alert, 0), errors.New("could not GetAlerts : Server refuse.")
+	}
+	return r.GetAlerts(), nil
 }
 
 func (client MiniserverAispridClient) Set (varName string, varValue int32) (string, error) {

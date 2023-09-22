@@ -9,8 +9,10 @@ import (
         "strconv"
         "bufio"
         "strings"
+        "google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/grpc"
 	"github.com/abriotde/minialertAisprid/messages"
+	"github.com/abriotde/minialertAisprid/monitorer"
 )
 
 type MiniserverAisprid struct {
@@ -19,8 +21,8 @@ type MiniserverAisprid struct {
 	connected bool
 }
 
-// server is used to implement helloworld.GreeterServer.
 type server_t struct {
+	monitoring monitorer.Monitorer
 	messages.UnimplementedGreeterServer
 }
 
@@ -34,15 +36,28 @@ func Listen (port string) (MiniserverAisprid, error) {
         defer listener.Close()
         server.listener = listener
         server.Run()
-
 	return server, nil
 }
 
-// SayHello implements helloworld.GreeterServer
+// 
 func (s *server_t) SetIntVar(ctx context.Context, in *messages.SetIntVarRequest) (*messages.SetIntVarReply, error) {
 	sValue := strconv.Itoa(int(in.GetValue()))
 	fmt.Println("Received: ", in.GetName(), " = ", sValue)
+	s.monitoring.Log(in.GetName(), in.GetValue())
 	return &messages.SetIntVarReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
+}
+// 
+func (s *server_t) GetAlerts(ctx context.Context, in *messages.GetAlertsRequest) (*messages.GetAlertsReply, error) {
+	fmt.Println("Ask for alerts.")
+	var alerts []*messages.GetAlertsReply_Alert
+	var nbAlerts = 0
+	for _, alert := range s.monitoring.GetAlerts() {
+		a := messages.GetAlertsReply_Alert{Timestamp:timestamppb.New(alert.Timestamp), Name:alert.Name, Value:alert.Value}
+		alerts = append(alerts, &a)
+		nbAlerts += 1
+	}
+	fmt.Println("Have ",strconv.Itoa(nbAlerts)," alerts.")
+	return &messages.GetAlertsReply{Alerts:alerts, Ok:true}, nil
 }
 
 func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {
