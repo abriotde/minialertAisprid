@@ -19,7 +19,7 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, e
 	if argsLen<1 {
 		fmt.Fprintln(os.Stderr, "You must give comands to client.")
 		os.Exit(EXIT_ARGUMENT_ERROR)
-	} else if argsLen<2 {
+	} else if argsLen<1 {
 		fmt.Fprintln(os.Stderr, "Missing arguments.")
 		os.Exit(EXIT_ARGUMENT_ERROR)
 	}
@@ -42,15 +42,23 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, e
         		return false, err
         	}
 	} else if clientCmd=="get" {
-		var varName = args[1]
-		// TODO : check varname match possible value (No injection)
-        	fmt.Println("Get from server : ", varName)
-        	_,err := client.Get(varName);
-        	if err!=nil {
-        		return false, err
-        	}
+		if argsLen>1 && args[1]=="alerts" {
+			fmt.Println("Call server GetAlerts.")
+			alerts,err := client.GetAlerts()
+			if err!=nil {
+				return false, err
+			}
+			fmt.Println("Alerts :")
+			for _, alert := range alerts {
+				fmt.Println(" -> ", alert.GetName(), " for value = ", alert.GetValue())
+			}
+		} else {
+			fmt.Fprintln(os.Stderr, "Unimplemented parameter for get.")
+		}
+	} else if clientCmd=="help" {
+		fmt.Println("Existing commands are : \n - 'send [type] [int_value]' : Implemented types are cpu (Should be less than 80) and battery (Should be beetween 20 and 98) : see monitorer.go for more informations. \n - 'get alerts'\n - help \n")
 	} else {
-		fmt.Fprintln(os.Stderr, "Unknown client command : ", clientCmd, " possibilities are send|get.")
+		fmt.Fprintln(os.Stderr, "Unknown client command : ", clientCmd, " possibilities are send|get|help.")
 		os.Exit(EXIT_ARGUMENT_ERROR)
 	}
         return true, nil

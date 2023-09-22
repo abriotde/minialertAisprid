@@ -6,11 +6,11 @@ all: minialertAisprid
 
 minialertAisprid: messages/setIntVar_grpc.pb.go messages/setIntVar.pb.go
 	go build
-	
-messages/setIntVar_grpc.pb.go:
+
+messages/setIntVar_grpc.pb.go: messages/setIntVar.proto
 	$(PROTOC_GRPC_CMD) --go-grpc_out=. --go-grpc_opt=paths=source_relative  messages/setIntVar.proto
 
-messages/setIntVar.pb.go:
+messages/setIntVar.pb.go: messages/setIntVar.proto
 	$(PROTOC_CMD) --go_out=. --go_opt=paths=source_relative messages/setIntVar.proto
 
 dependencies:
