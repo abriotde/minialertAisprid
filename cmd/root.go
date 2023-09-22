@@ -4,7 +4,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 	"strconv"
 	"github.com/spf13/cobra"
 	"github.com/abriotde/minialertAisprid/server"
@@ -43,8 +42,8 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) (bool, e
         	}
 	} else if clientCmd=="get" {
 		if argsLen>1 && args[1]=="alerts" {
-			fmt.Println("Call server GetAlerts.")
-			alerts,err := client.GetAlerts()
+			fmt.Println("Call server GetAlertHistory.")
+			alerts,err := client.GetAlertHistory()
 			if err!=nil {
 				return false, err
 			}
@@ -91,9 +90,9 @@ var (
 				}
 				if interactive {
 			    		fmt.Println("Interactive mode is enable.")
+			    		// TODO : implement
 			    	} else {
 			    		runClientCmd(client, args)
-					fmt.Println("Client: " + strings.Join(args, " "))
 			   	}
 			   	client.Close()
 			}

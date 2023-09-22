@@ -21,8 +21,9 @@ type MiniserverAisprid struct {
 	connected bool
 }
 
+var monitoring monitorer.Monitorer
+
 type server_t struct {
-	monitoring monitorer.Monitorer
 	messages.UnimplementedGreeterServer
 }
 
@@ -40,24 +41,24 @@ func Listen (port string) (MiniserverAisprid, error) {
 }
 
 // 
-func (s *server_t) SetIntVar(ctx context.Context, in *messages.SetIntVarRequest) (*messages.SetIntVarReply, error) {
+func (s *server_t) SendDataMetric(ctx context.Context, in *messages.SendDataMetricRequest) (*messages.SendDataMetricReply, error) {
 	sValue := strconv.Itoa(int(in.GetValue()))
 	fmt.Println("Received: ", in.GetName(), " = ", sValue)
-	s.monitoring.Log(in.GetName(), in.GetValue())
-	return &messages.SetIntVarReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
+	monitoring.Log(in.GetName(), in.GetValue())
+	return &messages.SendDataMetricReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
 }
 // 
-func (s *server_t) GetAlerts(ctx context.Context, in *messages.GetAlertsRequest) (*messages.GetAlertsReply, error) {
+func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHistoryRequest) (*messages.GetAlertHistoryReply, error) {
 	fmt.Println("Ask for alerts.")
-	var alerts []*messages.GetAlertsReply_Alert
+	var alerts []*messages.GetAlertHistoryReply_Alert
 	var nbAlerts = 0
-	for _, alert := range s.monitoring.GetAlerts() {
-		a := messages.GetAlertsReply_Alert{Timestamp:timestamppb.New(alert.Timestamp), Name:alert.Name, Value:alert.Value}
+	for _, alert := range monitoring.GetAlertHistory() {
+		a := messages.GetAlertHistoryReply_Alert{Timestamp:timestamppb.New(alert.Timestamp), Name:alert.Name, Value:alert.Value}
 		alerts = append(alerts, &a)
 		nbAlerts += 1
 	}
 	fmt.Println("Have ",strconv.Itoa(nbAlerts)," alerts.")
-	return &messages.GetAlertsReply{Alerts:alerts, Ok:true}, nil
+	return &messages.GetAlertHistoryReply{Alerts:alerts, Ok:true}, nil
 }
 
 func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {

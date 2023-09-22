@@ -6,29 +6,29 @@ import "google/protobuf/timestamp.proto";
 // The greeting service definition.
 service Greeter {
   // Sends a greeting
-  rpc SetIntVar (SetIntVarRequest) returns (SetIntVarReply) {}
-  rpc GetAlerts (GetAlertsRequest) returns (GetAlertsReply) {}
+  rpc SendDataMetric (SendDataMetricRequest) returns (SendDataMetricReply) {}
+  rpc GetAlertHistory (GetAlertHistoryRequest) returns (GetAlertHistoryReply) {}
 }
 
 // The request message.
-message SetIntVarRequest {
+message SendDataMetricRequest {
   string name = 1;
   int32 value = 2;
 }
 
 // The response message
-message SetIntVarReply {
+message SendDataMetricReply {
   bool ok = 1;
   string message = 2;
 }
 
 // The request message.
-message GetAlertsRequest {
+message GetAlertHistoryRequest {
   google.protobuf.Timestamp history = 1;
 }
 
 // The response message
-message GetAlertsReply {
+message GetAlertHistoryReply {
   bool ok = 1;
   message Alert {
     google.protobuf.Timestamp timestamp = 1;

@@ -35,22 +35,22 @@ func (client MiniserverAispridClient) Close ()  {
 	client.connection.Close()
 }
 
-func (client MiniserverAispridClient) GetAlerts () ([]*messages.GetAlertsReply_Alert, error) {
-	fmt.Println("GetAlerts from server : ")
+func (client MiniserverAispridClient) GetAlertHistory () ([]*messages.GetAlertHistoryReply_Alert, error) {
+	fmt.Println("GetAlertHistory from server : ")
 
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := client.grpcConnection.GetAlerts(ctx, &messages.GetAlertsRequest{})
+	r, err := client.grpcConnection.GetAlertHistory(ctx, &messages.GetAlertHistoryRequest{})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "could not GetAlerts", err)
-		return make([]*messages.GetAlertsReply_Alert, 0), err
+		fmt.Fprintln(os.Stderr, "could not GetAlertHistory", err)
+		return make([]*messages.GetAlertHistoryReply_Alert, 0), err
 	}
 	if r.GetOk() != true {
-		fmt.Fprintln(os.Stderr, "could not GetAlerts : Server refuse.")
-		return make([]*messages.GetAlertsReply_Alert, 0), errors.New("could not GetAlerts : Server refuse.")
+		fmt.Fprintln(os.Stderr, "could not GetAlertHistory : Server refuse.")
+		return make([]*messages.GetAlertHistoryReply_Alert, 0), errors.New("could not GetAlertHistory : Server refuse.")
 	}
-	return r.GetAlerts(), nil
+	return r.GetAlertHistory(), nil
 }
 
 func (client MiniserverAispridClient) Set (varName string, varValue int32) (string, error) {
@@ -59,12 +59,12 @@ func (client MiniserverAispridClient) Set (varName string, varValue int32) (stri
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := client.grpcConnection.SetIntVar(ctx, &messages.SetIntVarRequest{Name:varName, Value:varValue})
+	r, err := client.grpcConnection.SendDataMetric(ctx, &messages.SendDataMetricRequest{Name:varName, Value:varValue})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "could not SetIntVar : ",varName," = ",varValue,": ", err)
+		fmt.Fprintln(os.Stderr, "could not SendDataMetric : ",varName," = ",varValue,": ", err)
 	}
 	if r.GetOk() != true {
-		fmt.Fprintln(os.Stderr, "could not SetIntVar : ",varName," = ",varValue,": Server refuse.")
+		fmt.Fprintln(os.Stderr, "could not SendDataMetric : ",varName," = ",varValue,": Server refuse.")
 	}
 	fmt.Println("Greeting: ", r.GetMessage())
 	return "OK", nil

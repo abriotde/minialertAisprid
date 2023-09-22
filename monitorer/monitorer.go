@@ -16,7 +16,7 @@ type Monitorer struct {
 	alerts []Alert
 }
 
-func (monito Monitorer) GetAlerts () []Alert {
+func (monito Monitorer) GetAlertHistory () []Alert {
 	return monito.alerts
 }
 
@@ -25,6 +25,8 @@ func (monito Monitorer) Log (varname string, varvalue int32) {
 	if alert!="" {
 		fmt.Println("New alert : ",alert," for ",varname, " = ",varvalue,".")
 		alert := Alert{Timestamp:time.Now(), Name:alert, Value:varvalue}
+	       	monito.alerts = append(monito.alerts, alert)
+	       	monito.alerts = append(monito.alerts, alert)
 	       	monito.alerts = append(monito.alerts, alert)
 	}
 	for _,a := range monito.alerts {
