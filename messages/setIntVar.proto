@@ -35,7 +35,7 @@ message GetAlertHistoryReply {
     string name = 2;
     int32 value = 3;
   }
-  repeated Alert alerts = 2;
+  repeated Alert alertHistory = 2;
 }
 
 

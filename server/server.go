@@ -58,7 +58,7 @@ func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHis
 		nbAlerts += 1
 	}
 	fmt.Println("Have ",strconv.Itoa(nbAlerts)," alerts.")
-	return &messages.GetAlertHistoryReply{Alerts:alerts, Ok:true}, nil
+	return &messages.GetAlertHistoryReply{AlertHistory:alerts, Ok:true}, nil
 }
 
 func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {
