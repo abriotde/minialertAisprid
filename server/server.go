@@ -45,13 +45,13 @@ func Listen (port string) (MiniserverAisprid, error) {
 // To treat the SendDataMetric request. It will register value of variable at current time but for the moment it register only if it alerts.
 func (s *server_t) SendDataMetric(ctx context.Context, in *messages.SendDataMetricRequest) (*messages.SendDataMetricReply, error) {
 	sValue := strconv.Itoa(int(in.GetValue()))
-	fmt.Println("Received: ", in.GetName(), " = ", sValue)
+	logger.Logger.Info("Received: ", in.GetName(), " = ", sValue)
 	s.monitoring.Log(in.GetName(), in.GetValue())
 	return &messages.SendDataMetricReply{Message: "Set " + in.GetName() + " = "+sValue, Ok:true}, nil
 }
 // To treat the GetAlertHistory request.
 func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHistoryRequest) (*messages.GetAlertHistoryReply, error) {
-	fmt.Println("Ask for alerts.")
+	logger.Logger.Info("Ask for alerts.")
 	var alerts []*messages.GetAlertHistoryReply_Alert
 	var nbAlerts = 0
 	// On converti les alertes "Monitorer" en alertes "protobuf"
@@ -60,14 +60,18 @@ func (s *server_t) GetAlertHistory(ctx context.Context, in *messages.GetAlertHis
 		alerts = append(alerts, &a)
 		nbAlerts += 1
 	}
-	fmt.Println("Have ",strconv.Itoa(nbAlerts)," alerts.")
+	logger.Logger.Info("Have ",strconv.Itoa(nbAlerts)," alerts.")
 	return &messages.GetAlertHistoryReply{AlertHistory:alerts, Ok:true}, nil
+}
+func init() {
+	// fmt.Println("Init().")
 }
 
 func (server MiniserverAisprid) Run () (MiniserverAisprid, error) {
+	monitoring_server.monitoring.Logger = logger.Logger
 	grpcServer := grpc.NewServer()
 	messages.RegisterGreeterServer(grpcServer, &monitoring_server)
-	fmt.Println("server listening at ", server.listener.Addr())
+	logger.Logger.Info("Server listening at "+ server.listener.Addr().String())
 	if err := grpcServer.Serve(server.listener); err != nil {
 		logger.Logger.Error("failed to serve: ") // TODO: + err
 		return server, err

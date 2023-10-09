@@ -11,9 +11,8 @@ package monitorer
 
 import (
         "time"
-        "fmt"
         "strconv"
-	"github.com/abriotde/minialertAisprid/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type Alert struct {
@@ -21,26 +20,23 @@ type Alert struct {
     Name      string
     Value     int32
 }
+var monito_alerts []Alert
 
 type Monitorer struct {
 	alerts []Alert
+	Logger *logrus.Logger
 }
 
 func (monito Monitorer) GetAlertHistory () []Alert {
-	return monito.alerts
+	return monito_alerts
 }
 
 func (monito Monitorer) Log (varname string, varvalue int32) {
 	alert := monito.isAlert(varname, varvalue)
 	if alert!="" {
-		fmt.Println("New alert : ",alert," for ",varname, " = ",varvalue,".")
+		monito.Logger.Info("New alert : "+alert+" for "+varname+ " = "+strconv.Itoa(int(varvalue))+".")
 		alert := Alert{Timestamp:time.Now(), Name:alert, Value:varvalue}
-	       	monito.alerts = append(monito.alerts, alert)
-	       	monito.alerts = append(monito.alerts, alert)
-	       	monito.alerts = append(monito.alerts, alert)
-	}
-	for _,a := range monito.alerts {
-		logger.Logger.Info("Alert: "+a.Name+" = "+strconv.Itoa(int(a.Value)))
+	       	monito_alerts = append(monito_alerts, alert)
 	}
 }
 

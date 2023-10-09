@@ -5,6 +5,7 @@ PROTOC_GRPC_CMD = protoc --plugin=$(shell go env GOPATH)/bin/protoc-gen-go-grpc
 all: minialertAisprid
 
 minialertAisprid: messages/serverProtocol_grpc.pb.go messages/serverProtocol.pb.go
+	mkdir -p log
 	go build
 	# mkdir log
 

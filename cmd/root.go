@@ -48,7 +48,7 @@ func runClientCmd(client server.MiniserverAispridClient, args []string) error {
         	}
 	} else if clientCmd=="get" {
 		if argsLen>1 && args[1]=="alerts" {
-			fmt.Println("Call server GetAlertHistory.")
+			// fmt.Println("Call server GetAlertHistory.")
 			alerts,err := client.GetAlertHistory()
 			if err!=nil {
 				return err

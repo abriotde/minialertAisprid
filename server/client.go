@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"github.com/abriotde/minialertAisprid/messages"
@@ -31,7 +30,7 @@ func Connect (url string) (MiniserverAispridClient, error)  {
         client.connection = conn
         client.connected = true
 	client.grpcConnection = messages.NewGreeterClient(client.connection)
-	fmt.Println("Connected to  : ", url)
+	logger.Logger.Debug("Connected to  : ", url)
 	return client, nil
 }
 // Fonction to close connection to the server
@@ -41,8 +40,7 @@ func (client MiniserverAispridClient) Close ()  {
 
 // Return alert history based on previous Set() call where name/value exceed threashold defined on server side.
 func (client MiniserverAispridClient) GetAlertHistory () ([]*messages.GetAlertHistoryReply_Alert, error) {
-	fmt.Println("GetAlertHistory from server : ")
-
+	// fmt.Println("GetAlertHistory from server : ")
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -59,19 +57,19 @@ func (client MiniserverAispridClient) GetAlertHistory () ([]*messages.GetAlertHi
 }
 // Set the current value of the variable name registred on the server.
 func (client MiniserverAispridClient) Set (varName string, varValue int32) (string, error) {
-	fmt.Println("Set to server : ", varName, " = ", varValue)
-
+	// fmt.Println("Set to server : ", varName, " = ", varValue)
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	r, err := client.grpcConnection.SendDataMetric(ctx, &messages.SendDataMetricRequest{Name:varName, Value:varValue})
 	if err != nil {
 		logger.Logger.Error("could not SendDataMetric : "+varName," = "+strconv.Itoa(int(varValue))+": ") // TODO: + err
+		return "KO", err
 	}
 	if r.GetOk() != true {
 		logger.Logger.Error("could not SendDataMetric : "+varName+" = "+strconv.Itoa(int(varValue))+": Server refuse.")
+		return "KO", nil
 	}
-	fmt.Println("Greeting: ", r.GetMessage())
 	return "OK", nil
 }
 // Function to test client/server communication with simple ASCII (useless now?)
